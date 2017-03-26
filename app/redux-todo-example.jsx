@@ -1,8 +1,14 @@
 var redux = require('redux');
 
-let reducer = (state = {name: 'Anonymous'}, action) => {
+let stateDefault = {
+    todos: [],
+    searchText: '',
+    showCompleted: false
+}
+let reducer = (state = stateDefault, action) => {
     return state;
 }
+
 let store = redux.createStore(reducer);
 
 let currentState = store.getState();
