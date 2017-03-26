@@ -1,7 +1,7 @@
 var redux = require('redux');
+var axios = require('axios');
 
-// Name reducer and action generators
-// ---------------
+// Name reducer and action generators ---------------
 let nameReducer = (state = 'Anonymous', action) => {
   switch (action.type) {
     case 'CHANGE_NAME':
@@ -12,21 +12,16 @@ let nameReducer = (state = 'Anonymous', action) => {
 }
 
 let changeName = name => {
-  return {
-    type: 'CHANGE_NAME',
-    name
-  }
+  return {type: 'CHANGE_NAME', name}
 }
 
-// Hobbies reducer and action generators
-// ---------------
+// Hobbies reducer and action generators ---------------
 let nextHobbieId = 1;
 let hobbiesReducer = (state = [], action) => {
   switch (action.type) {
     case 'ADD_HOBBY':
       return [
-        ...state, 
-        {
+        ...state, {
           id: nextHobbieId++,
           hobby: action.hobby
         }
@@ -39,33 +34,25 @@ let hobbiesReducer = (state = [], action) => {
 }
 
 let addHobby = hobby => {
-  return {
-    type: 'ADD_HOBBY',
-    hobby
-  }
+  return {type: 'ADD_HOBBY', hobby}
 }
 
 let removeHobby = id => {
-  return {
-    type: 'REMOVE_HOBBY',
-    id
-  }
+  return {type: 'REMOVE_HOBBY', id}
 }
 
-// Movies reducer and action generators
-// ----------------
+// Movies reducer and action generators ----------------
 let nextMovieId = 1;
 let moviesReducer = (state = [], action) => {
   switch (action.type) {
     case 'ADD_MOVIE':
       return [
-        ...state,
-        {
+        ...state, {
           id: nextMovieId++,
           movie: action.movie,
           genre: action.genre
         }
-      ]  
+      ]
     case 'REMOVE_MOVIE':
       return state.filter(movie => movie.id !== action.id);
     default:
@@ -74,21 +61,51 @@ let moviesReducer = (state = [], action) => {
 }
 
 let addMovie = (movie, genre) => {
-  return {
-    type: 'ADD_MOVIE',
-    movie,
-    genre
-  }
+  return {type: 'ADD_MOVIE', movie, genre}
 }
 
 let removeMovie = id => {
-  return {
-    type: 'REMOVE_MOVIE',
-    id
+  return {type: 'REMOVE_MOVIE', id}
+}
+
+// Map reducer and action generators ----------------
+let mapReducer = (state = {
+  isFetching: false,
+  url: undefined
+}, action) => {
+  switch (action.type) {
+    case 'START_LOCATION_FETCH':
+      return {isFetching: true, url: undefined}
+    case 'COMPLETE_LOCATION_FETCH':
+      return {isFetching: false, url: action.url}
+    default:
+      return state;
   }
 }
 
-let reducer = redux.combineReducers({name: nameReducer, hobbies: hobbiesReducer, movies: moviesReducer});
+let startLocationFetch = () => {
+  return {type: 'START_LOCATION_FETCH'}
+}
+
+let completeLocationFetch = url => {
+  return {type: 'COMPLETE_LOCATION_FETCH', url}
+}
+
+let fetchLocation = () => {
+  store.dispatch(startLocationFetch());
+  axios
+    .get('https://ipinfo.io/')
+    .then(res => {
+      let loc = res.data.loc;
+      let baseUrl = 'https://www.google.com/maps?q=';
+      store.dispatch(completeLocationFetch(baseUrl + loc))
+    })
+    .catch(err => {
+      console.log('error is: ', err);
+    });
+}
+
+let reducer = redux.combineReducers({name: nameReducer, hobbies: hobbiesReducer, movies: moviesReducer, map: mapReducer});
 
 var store = redux.createStore(reducer, redux.compose(window.devToolsExtension
   ? window.devToolsExtension()
@@ -97,9 +114,19 @@ var store = redux.createStore(reducer, redux.compose(window.devToolsExtension
 // Subscribe to changes
 var unsubscribe = store.subscribe(() => {
   var state = store.getState();
-  console.log(state)
+  console.log(state);
+  if (state.map.isFetching) {
+    document
+      .getElementById('app')
+      .innerHTML = 'loading ...'
+  } else if (state.map.url) {
+    document
+      .getElementById('app')
+      .innerHTML = `<a target="'_blank'" href='${state.map.url}'>goto location</a>`;
+  }
 });
 // unsubscribe();
+fetchLocation();
 
 store.dispatch(changeName('Andrew'));
 store.dispatch(addHobby('swimming'));
