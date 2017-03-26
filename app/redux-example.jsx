@@ -7,52 +7,52 @@ let stateDefault = {
 }
 let hobbieId = 1;
 let movieId = 1;
-var reducer = (state = stateDefault, action) => {
-  // state = state || {name: 'Anonymous'};
-
+let nameReducer = (state = 'Anonymous', action) => {
   switch (action.type) {
     case 'CHANGE_NAME':
-      return {
-        ...state,
-        name: action.name
-      };
-    case 'ADD_HOBBY':
-      return {
-        ...state,
-        hobbies: [
-          ...state.hobbies,
-          {
-            id: hobbieId++,
-            hobby: action.hobby
-          }
-        ]
-      }
-    case 'ADD_MOVIE': 
-      return {
-        ...state,
-        movies: [
-          ...state.movies,
-          {
-            id: movieId++,
-            movie: action.movie,
-            genre: action.genre
-          }
-        ]
-      }
-    case 'REMOVE_HOBBY':
-      return {
-        ...state,
-        hobbies: state.hobbies.filter(hobby => hobby.id !== action.id)
-      }
-    case 'REMOVE_MOVIE':
-      return {
-        ...state,
-        movies: state.movies.filter(movie => movie.id !== action.id)
-      }
+      return action.name;
     default:
       return state;
   }
-};
+}
+
+let hobbiesReducer = (state = [], action) => {
+  switch (action.type) {
+    case 'ADD_HOBBY':
+      return [
+        ...state, 
+        {
+          id: hobbieId++,
+          hobby: action.hobby
+        }
+      ]
+    case 'REMOVE_HOBBY':
+      return state.filter(hobby => hobby.id !== action.id);
+    default:
+      return state;
+  }
+}
+
+let moviesReducer = (state = [], action) => {
+  switch (action.type) {
+    case 'ADD_MOVIE':
+      return [
+        ...state,
+        {
+          id: movieId++,
+          movie: action.movie,
+          genre: action.genre
+        }
+      ]  
+    case 'REMOVE_MOVIE':
+      return state.filter(movie => movie.id !== action.id);
+    default:
+      return state;
+  }
+}
+
+let reducer = redux.combineReducers({name: nameReducer, hobbies: hobbiesReducer, movies: moviesReducer});
+
 var store = redux.createStore(reducer, redux.compose(window.devToolsExtension
   ? window.devToolsExtension()
   : f => f));
@@ -75,16 +75,10 @@ store.dispatch({type: 'CHANGE_NAME', name: 'Emily'});
 
 store.dispatch({type: 'ADD_HOBBY', hobby: 'running'});
 
-store.dispatch({
-  type: 'REMOVE_HOBBY',
-  id: 2
-});
+store.dispatch({type: 'REMOVE_HOBBY', id: 2});
 
 store.dispatch({type: 'ADD_MOVIE', movie: 'madagascar', genre: 'anime'});
 
 store.dispatch({type: 'ADD_MOVIE', movie: 'inception', genre: 'thriller'})
 
-store.dispatch({
-  type: 'REMOVE_MOVIE',
-  id: 1
-});
+store.dispatch({type: 'REMOVE_MOVIE', id: 1});
